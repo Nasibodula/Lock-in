@@ -4,10 +4,12 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
   base: './',
+  server: { proxy: { '/api': 'http://localhost:3000' } },
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: { navigateFallbackDenylist: [/^\/api/] },
       manifest: {
         name: 'Lock-in', short_name: 'Lock-in', description: 'Daily habit tracker',
         theme_color: '#14213d', background_color: '#14213d', display: 'standalone',
