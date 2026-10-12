@@ -16,6 +16,6 @@ Open the hosted URL in Chrome (Android) or Safari (iOS) and choose Install app /
 ## Structure
 - src/lib.js        data, dates, streak logic, localStorage
 - src/App.jsx       sidebar and view switching
-- src/Dashboard.jsx, Tracker.jsx, Daily.jsx, Settings.jsx
+- src/Dashboard.jsx, Tracker.jsx, Settings.jsx
 - src/styles.css    all styling
 - vite.config.js    PWA manifest (name, colors, icons)
