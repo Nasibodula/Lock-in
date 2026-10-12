@@ -9,24 +9,64 @@ export const P = s => { const [a, b, c] = s.split('-'); return new Date(+a, b - 
 export const TK = K(new Date())
 export const fmt = k => P(k).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
 
+export const DEEN = () => ({
+  items: [
+    { id: 'd1', name: 'Fajr', group: 'Prayers' },
+    { id: 'd2', name: 'Dhuhr', group: 'Prayers' },
+    { id: 'd3', name: 'Asr', group: 'Prayers' },
+    { id: 'd4', name: 'Maghrib', group: 'Prayers' },
+    { id: 'd5', name: 'Isha', group: 'Prayers' },
+    { id: 'd6', name: 'Read Quran', group: 'Quran' },
+    { id: 'd7', name: 'Quran revision', group: 'Quran' },
+    { id: 'd8', name: 'Morning adhkar', group: 'Adhkar' },
+    { id: 'd9', name: 'Evening adhkar', group: 'Adhkar' },
+    { id: 'd10', name: 'Sunnah prayers', group: 'Extras' },
+    { id: 'd11', name: 'Dua', group: 'Extras' },
+    { id: 'd12', name: 'Sadaqah', group: 'Extras' }
+  ],
+  log: {},   // { 'YYYY-MM-DD': [itemId, ...] }
+  pages: {}  // { 'YYYY-MM-DD': 'number of pages' }
+})
+
 export const DEF = () => ({
   start: '2026-10-01',
   end: '2026-12-31',
   habits: [
-    { id: 'h1', name: 'Job applications' },
-    { id: 'h2', name: 'Farmer chatbot build' },
-    { id: 'h3', name: 'MBA concept paper' },
-    { id: 'h4', name: 'Learn a skill' },
-    { id: 'h5', name: 'Exercise' }
+    { id: 'p1', name: 'Wake up at 6:00 am', group: 'Morning routine' },
+    { id: 'p2', name: 'Drink jeera water', group: 'Morning routine' },
+    { id: 'p3', name: 'Breathing exercise', group: 'Morning routine' },
+    { id: 'p4', name: '30 minutes workout', group: 'Morning routine' },
+    { id: 'p5', name: 'Read 10 pages', group: 'Morning routine' },
+    { id: 'p6', name: 'Write affirmations', group: 'Morning routine' },
+
+    { id: 'p7', name: '10k steps', group: 'Health' },
+    { id: 'p8', name: '3L water', group: 'Health' },
+    { id: 'p9', name: 'No sugar', group: 'Health' },
+    { id: 'p10', name: 'No junk', group: 'Health' },
+    { id: 'p11', name: 'Skincare', group: 'Health' },
+    { id: 'p12', name: 'Haircare', group: 'Health' },
+    { id: 'p13', name: 'Meditations', group: 'Health' },
+
+    { id: 'p14', name: 'Morning hour without screen', group: 'Digital detox' },
+    { id: 'p15', name: 'No scrolling', group: 'Digital detox' },
+
+    { id: 'p16', name: 'Plan next day in advance', group: 'Night routine' }
   ],
   log: {},   // { 'YYYY-MM-DD': [habitId, ...] }
-  notes: {}  // { 'YYYY-MM-DD': { mood, note } }
+  notes: {}, // { 'YYYY-MM-DD': { mood, note } }  note = end-of-day remark
+  tasks: {}, // { 'YYYY-MM-DD': [{ id, text, time, done }] }
+  deen: DEEN()
 })
 
 function load() {
   try {
     const p = JSON.parse(localStorage.getItem(KEY))
-    if (p && p.habits && p.log && p.start) return { notes: {}, ...p }
+    if (p && p.habits && p.log && p.start) {
+      const s = { notes: {}, tasks: {}, deen: DEEN(), ...p }
+      // old habits had no section, so swap in the new list from the picture
+      if (s.habits.length && !s.habits.some(h => h.group)) s.habits = DEF().habits
+      return s
+    }
   } catch {}
   return DEF()
 }
@@ -67,3 +107,23 @@ export function streaks(S, D) {
   D.forEach(k => { if (full(S, k)) { run++; best = Math.max(best, run) } else run = 0 })
   return { cur, best }
 }
+
+// --- new in this version ---
+
+// groups a list of habits (or deen items) by their section name, keeping order
+export const groupsOf = habits => {
+  const m = new Map()
+  habits.forEach(h => {
+    const g = h.group || 'Daily habits'
+    if (!m.has(g)) m.set(g, [])
+    m.get(g).push(h)
+  })
+  return [...m]
+}
+
+// which day a page should show: the picked day, else today, else the first day
+export const dayOf = (D, sel) => (D.includes(sel) ? sel : D.includes(TK) ? TK : D[0])
+
+// tick or untick a Deen item for a day
+export const toggleDeen = (setS, k, id, on) =>
+  setS(S => ({ ...S, deen: { ...S.deen, log: { ...S.deen.log, [k]: [...(S.deen.log[k] || []).filter(x => x !== id), ...(on ? [id] : [])] } } }))
