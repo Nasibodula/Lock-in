@@ -1,8 +1,11 @@
+import { useState } from 'react'
 import { TK, P, cnt, dayOf, groupsOf, has, toggle } from './lib.js'
 
 const MOODS = ['😞', '😕', '😐', '🙂', '🔥']
+const LIMIT = 5
 
 export default function Habits({ S, setS, D, sel, setSel }) {
+  const [open, setOpen] = useState({})
   const k = dayOf(D, sel)
   const i = D.indexOf(k)
   const n = S.notes[k] || {}
@@ -20,21 +23,31 @@ export default function Habits({ S, setS, D, sel, setSel }) {
 
       {!S.habits.length && <section><h4>No habits yet:</h4><ul className="one"><li>Add some in Settings</li></ul></section>}
 
-      {groupsOf(S.habits).map(([g, hs]) => (
-        <section key={g}>
-          <h4>{g}:</h4>
-          <ul className={hs.length > 6 ? 'two' : 'one'}>
-            {hs.map(h => (
-              <li key={h.id} className={has(S, k, h.id) ? 'done' : ''}>
-                <label>
-                  <span>{h.name}</span>
-                  <input type="checkbox" checked={has(S, k, h.id)} onChange={e => toggle(setS, k, h.id, e.target.checked)} />
-                </label>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
+      {groupsOf(S.habits).map(([g, hs]) => {
+        const long = hs.length > LIMIT
+        const shown = long && !open[g] ? hs.slice(0, LIMIT) : hs
+        return (
+          <section key={g}>
+            <h4>{g}:</h4>
+            <ul className={shown.length > 6 ? 'two' : 'one'}>
+              {shown.map(h => (
+                <li key={h.id} className={has(S, k, h.id) ? 'done' : ''}>
+                  <label>
+                    <span>{h.name}</span>
+                    <input type="checkbox" checked={has(S, k, h.id)} onChange={e => toggle(setS, k, h.id, e.target.checked)} />
+                  </label>
+                </li>
+              ))}
+            </ul>
+            {long && (
+              <button type="button" className="more" aria-expanded={!!open[g]}
+                onClick={() => setOpen(o => ({ ...o, [g]: !o[g] }))}>
+                {open[g] ? '▴ show less' : `▾ ${hs.length - LIMIT} more`}
+              </button>
+            )}
+          </section>
+        )
+      })}
 
       <section>
         <h4>End of day:</h4>
